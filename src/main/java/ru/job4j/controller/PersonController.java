@@ -20,55 +20,39 @@ public class PersonController {
 
     @GetMapping("/")
     public List<Person> findAll() {
-        return  personService.findAll();
+        return personService.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable int id) {
-        ResponseEntity<?> result;
-        Optional<Person> person = personService.findById(id);
-        if (person.isPresent()) {
-            result = ResponseEntity.ok(person.get());
-        } else {
-            result = ResponseEntity.status(HttpStatus.NOT_FOUND).body("Человек с заданным id не найден.");
-        }
-        return result;
+        return personService.findById(id)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Человек с заданным id не найден"));
     }
 
     @PostMapping("/")
     public ResponseEntity<?> create(@RequestBody Person person) {
-        ResponseEntity<?> result;
-        Person savedPerson = personService.save(person);
-        if (savedPerson != null) {
-            result = ResponseEntity.status(HttpStatus.CREATED).body(savedPerson);
-        } else {
-            result = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка при сохранении.");
-        }
-        return result;
+        return Optional.ofNullable(personService.save(person))
+                .<ResponseEntity<?>>map(savedPerson -> ResponseEntity.status(HttpStatus.CREATED).body(savedPerson))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.CONFLICT).body("Ошибка при сохранении"));
     }
 
     @PutMapping("/")
     public ResponseEntity<?> update(@RequestBody Person person) {
-        ResponseEntity<?> result;
-        if (personService.update(person)) {
-            result = ResponseEntity.ok().build();
-        } else {
-            result = ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при редактировании.");
-        }
-        return result;
+        return Optional.of(personService.update(person))
+                .filter(updateSuccess -> updateSuccess)
+                .<ResponseEntity<?>>map(s -> ResponseEntity.ok().build())
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при редактировании"));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable int id) {
         Person person = new Person();
         person.setId(id);
-        ResponseEntity<?> result;
-        if (personService.delete(person)) {
-            result = ResponseEntity.ok().build();
-        } else {
-            result = ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при удалении.");
-        }
-        return result;
+        return Optional.of(personService.delete(person))
+                .filter(deleteSuccess -> deleteSuccess)
+                .<ResponseEntity<?>>map(s -> ResponseEntity.ok().build())
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при удалении"));
     }
 }
 

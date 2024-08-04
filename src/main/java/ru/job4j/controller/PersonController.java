@@ -2,6 +2,7 @@ package ru.job4j.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.domain.Person;
 import ru.job4j.service.PersonService;
@@ -13,9 +14,11 @@ import java.util.Optional;
 @RequestMapping("/person")
 public class PersonController {
     private final PersonService personService;
+    private final BCryptPasswordEncoder encoder;
 
-    public PersonController(PersonService personService) {
+    public PersonController(PersonService personService, BCryptPasswordEncoder encoder) {
         this.personService = personService;
+        this.encoder = encoder;
     }
 
     @GetMapping("/")
@@ -55,4 +58,6 @@ public class PersonController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при удалении"));
     }
 }
+
+//todo доделать /login и проверить в curl
 

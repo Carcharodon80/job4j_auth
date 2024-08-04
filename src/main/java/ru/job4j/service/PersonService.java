@@ -21,6 +21,10 @@ public class PersonService {
         return personRepository.findById(id);
     }
 
+    public Optional<Person> findByName(String name) {
+        return personRepository.findByLogin(name);
+    }
+
     public Person save(Person person) {
         try {
             return personRepository.save(person);

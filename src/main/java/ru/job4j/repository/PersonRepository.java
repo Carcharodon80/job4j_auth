@@ -14,7 +14,5 @@ public interface PersonRepository extends CrudRepository<Person, Integer> {
     @Query("from person")
     List<Person> findAll();
 
-    @NonNull
-    @Query("from person")
-    Optional<Person> findByLogin(String login);
+    Optional<Person> findByLogin(String username);
 }

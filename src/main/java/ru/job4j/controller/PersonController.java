@@ -33,8 +33,9 @@ public class PersonController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Человек с заданным id не найден"));
     }
 
-    @PostMapping("/")
+    @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody Person person) {
+        person.setPassword(encoder.encode(person.getPassword()));
         return Optional.ofNullable(personService.save(person))
                 .<ResponseEntity<?>>map(savedPerson -> ResponseEntity.status(HttpStatus.CREATED).body(savedPerson))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.CONFLICT).body("Ошибка при сохранении"));
@@ -58,6 +59,3 @@ public class PersonController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при удалении"));
     }
 }
-
-//todo доделать /login и проверить в curl
-

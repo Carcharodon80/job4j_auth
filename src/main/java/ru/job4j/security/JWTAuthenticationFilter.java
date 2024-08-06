@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.job4j.domain.Person;
 
@@ -24,12 +25,13 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public static final long EXPIRATION_TIME = 864000000;
     public static final String TOKEN_PREFIX = "Bearer";
     public static final String HEADER_STRING = "Authorization";
-    public static final String SIGN_UP_URL = "/person/sign-up";
+    public static final String CREATE_URL = "/person/create";
 
     private final AuthenticationManager auth;
 
     public JWTAuthenticationFilter(AuthenticationManager auth) {
         this.auth = auth;
+        setFilterProcessesUrl("/person/login");
     }
 
     @Override
@@ -53,7 +55,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             FilterChain chain, Authentication authResult)
             throws IOException, ServletException {
         String token = JWT.create()
-                .withSubject(((Person) authResult.getPrincipal()).getLogin())
+                .withSubject(((User) authResult.getPrincipal()).getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(HMAC512(SECRET.getBytes()));
         response.addHeader(HEADER_STRING, TOKEN_PREFIX + token);

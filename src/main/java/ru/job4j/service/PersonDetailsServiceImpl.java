@@ -20,10 +20,10 @@ public class PersonDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
-        Optional<Person> optionalUser = personService.findByName(userName);
-        if (optionalUser.isEmpty()) {
+        Optional<Person> optionalPerson = personService.findByName(userName);
+        if (optionalPerson.isEmpty()) {
             throw new UsernameNotFoundException(userName);
         }
-        return new User(optionalUser.get().getLogin(), optionalUser.get().getPassword(), new ArrayList<>());
+        return new User(optionalPerson.get().getLogin(), optionalPerson.get().getPassword(), new ArrayList<>());
     }
 }

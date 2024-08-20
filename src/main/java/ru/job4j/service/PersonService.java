@@ -25,11 +25,11 @@ public class PersonService {
         return personRepository.findByLogin(name);
     }
 
-    public Person save(Person person) {
+    public Optional<Person> save(Person person) {
         try {
-            return personRepository.save(person);
+            return Optional.of(personRepository.save(person));
         } catch (Exception e) {
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -45,12 +45,12 @@ public class PersonService {
         }
     }
 
-    public boolean delete(Person person) {
+    public Optional<Boolean> delete(int id) {
         try {
-            personRepository.delete(person);
-            return true;
+            personRepository.deleteById(id);
+            return Optional.of(true);
         } catch (Exception e) {
-            return false;
+            return Optional.of(false);
         }
     }
 }

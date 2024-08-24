@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Person;
+import ru.job4j.dto.PasswordIdDto;
 import ru.job4j.exception.JohnAndJaneDoeException;
 import ru.job4j.service.PersonService;
 
@@ -108,6 +109,23 @@ public class PersonController {
                         .contentLength(finalImage.length)
                         .body(finalImage))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при удалении"));
+    }
+
+    @PatchMapping("/")
+    public ResponseEntity<?> patch(@RequestBody PasswordIdDto passwordIdDto) {
+        if (passwordIdDto.getPassword().isEmpty()) {
+            throw new NullPointerException("Пароль не может быть пустым.");
+        }
+        Person person = personService.findById(passwordIdDto.getId()).orElseThrow(
+                () -> new IllegalArgumentException("Пользователь с указанным id не найден")
+        );
+        person.setPassword(encoder.encode(passwordIdDto.getPassword()));
+        return Optional.of(personService.update(person))
+                .filter(updateSuccess -> updateSuccess)
+                .<ResponseEntity<?>>map(s -> ResponseEntity
+                        .status(HttpStatus.OK)
+                        .body("Пароль успешно обновлен."))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка при обновлении пароля"));
     }
 
     @ExceptionHandler(value = JohnAndJaneDoeException.class)

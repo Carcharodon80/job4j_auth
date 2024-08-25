@@ -7,15 +7,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Person;
 import ru.job4j.dto.PasswordIdDto;
 import ru.job4j.exception.JohnAndJaneDoeException;
+import ru.job4j.handlers.Operation;
 import ru.job4j.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,6 +28,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/person")
+@Validated
 public class PersonController {
     private final PersonService personService;
     private final BCryptPasswordEncoder encoder;
@@ -46,20 +51,15 @@ public class PersonController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findById(@PathVariable int id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("Id не может быть меньше 0");
-        }
+    public ResponseEntity<?> findById(@PathVariable @Min(value = 1, message = "Id не может быть меньше 1") int id) {
         Person user = personService.findById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Человек с заданным id не найден"));
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody Person person) {
-        if (person.getLogin().isEmpty() || person.getPassword().isEmpty()) {
-            throw new NullPointerException("Логин или пароль не могут быть пустыми.");
-        }
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<?> create(@Valid @RequestBody Person person) {
         if (person.getLogin().equals("John Doe") || person.getLogin().equals("Jane Doe")) {
             throw new JohnAndJaneDoeException("John and Jane Doe не разрешается.");
         }
@@ -76,10 +76,8 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<?> update(@RequestBody Person person) {
-        if (person.getLogin() == null || person.getPassword() == null) {
-            throw new NullPointerException("Логин или пароль не могут быть пустыми.");
-        }
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<?> update(@Valid @RequestBody Person person) {
         person.setPassword(encoder.encode(person.getPassword()));
         return Optional.of(personService.update(person))
                 .filter(updateSuccess -> updateSuccess)
@@ -91,10 +89,7 @@ public class PersonController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable int id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("Id не может быть меньше 0");
-        }
+    public ResponseEntity<?> delete(@PathVariable @Min(value = 1, message = "Id не может быть меньше 1") int id) {
         byte[] image = new byte[0];
         try {
             image = Files.readAllBytes(Paths.get("./src/main/resources/ok.png"));
@@ -112,10 +107,8 @@ public class PersonController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<?> patch(@RequestBody PasswordIdDto passwordIdDto) {
-        if (passwordIdDto.getPassword().isEmpty()) {
-            throw new NullPointerException("Пароль не может быть пустым.");
-        }
+    @Validated(Operation.OnPatch.class)
+    public ResponseEntity<?> patch(@Valid @RequestBody PasswordIdDto passwordIdDto) {
         return personService.patch(passwordIdDto)
                 .filter(updateSuccess -> updateSuccess)
                 .<ResponseEntity<?>>map(s -> ResponseEntity

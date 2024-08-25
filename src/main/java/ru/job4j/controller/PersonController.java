@@ -116,11 +116,7 @@ public class PersonController {
         if (passwordIdDto.getPassword().isEmpty()) {
             throw new NullPointerException("Пароль не может быть пустым.");
         }
-        Person person = personService.findById(passwordIdDto.getId()).orElseThrow(
-                () -> new IllegalArgumentException("Пользователь с указанным id не найден")
-        );
-        person.setPassword(encoder.encode(passwordIdDto.getPassword()));
-        return Optional.of(personService.update(person))
+        return personService.patch(passwordIdDto)
                 .filter(updateSuccess -> updateSuccess)
                 .<ResponseEntity<?>>map(s -> ResponseEntity
                         .status(HttpStatus.OK)

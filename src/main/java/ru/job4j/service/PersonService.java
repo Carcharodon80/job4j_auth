@@ -1,8 +1,10 @@
 package ru.job4j.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.job4j.domain.Person;
+import ru.job4j.dto.PasswordIdDto;
 import ru.job4j.repository.PersonRepository;
 
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class PersonService {
     private final PersonRepository personRepository;
+    private final BCryptPasswordEncoder encoder;
 
     public List<Person> findAll() {
         return personRepository.findAll();
@@ -43,6 +46,15 @@ public class PersonService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public Optional<Boolean> patch(PasswordIdDto passwordIdDto) {
+        return findById(passwordIdDto.getId())
+                .map(person -> {
+                            person.setPassword(encoder.encode(passwordIdDto.getPassword()));
+                            return update(person);
+                        }
+                );
     }
 
     public Optional<Boolean> delete(int id) {
